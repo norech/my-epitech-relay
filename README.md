@@ -1,0 +1,74 @@
+# My Epitech Relay
+
+A barely working relay for interacting with My Epitech endpoints without token.
+
+## About
+
+### How?
+It is backed up with Puppeteer to provide authentication mechanics.
+Basically, it is a headless Chromium browser that sometimes does run
+only for token refresh purposes (Once every few hours).
+
+### Why?
+Because there actually is no easy way to use the data provided by
+these endpoints due to oauth.
+
+## Install & build
+
+Install NodeJS and NPM, clone this repo, and run the following commands inside:
+
+```bash
+npm install
+npm run build
+```
+
+## Manual login
+
+> BE CAREFUL, a `cookies.json` file will be created, and may allow everyone whom
+> has access to it to login to the Microsoft account you were logged in!!
+
+Before getting started, you need to know that the first login must be done.
+This step requires a graphical interface and may occur as soon as Microsoft auth
+requires it.
+
+### Graphical interface
+
+If Microsoft authentication is required, a window will appear, DO NOT CLOSE IT,
+or you will need to restart the relay.
+
+You will need to authenticate in this window, in the opened tab. Complete all
+authentication steps, click on "Stay logged in" everywhere you're asked, and
+wait until you are back on my.epitech.eu. The window should close.
+
+### `NO_WINDOW` mode
+
+Let's say you don't have any graphical interface. You will need to provide the
+cookies to the browser. To do that, install the relay on another machine and
+proceed to authenticate. Then copy the `cookies.json` file into the remote relay
+working directory.
+
+This might not work for all cases, but it might at least give you a few hints.
+
+## Configure
+
+Copy `.env.example` into a `.env` file, and make your adjustments.
+
+## Start
+
+> Please read the "Manual login" step before if not done yet. It is a required step.
+
+```
+npm start
+```
+
+## Use
+
+Considering that you'll host it on `localhost:8080`.
+All requests will be proxied as specified below. You will NOT need any token.
+
+```
+https://localhost:8080/epitest/*  =>  https://api.epitest.eu/*
+```
+
+For example, to get `https://api.epitest.eu/me/2021`,
+you'll need to call `http://localhost:8080/epitest/me/2021`.

@@ -1,0 +1,22 @@
+{
+  "name": "my-epitech-relay",
+  "version": "0.1.0",
+  "description": "",
+  "main": "out/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node out/index.js"
+  },
+  "author": "Norech",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.2",
+    "puppeteer": "^13.0.1",
+    "typescript": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13"
+  }
+}

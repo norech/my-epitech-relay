@@ -1,0 +1,5 @@
+cookies.json
+cookies*.json
+node_modules
+out
+.env
