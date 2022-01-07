@@ -2,10 +2,10 @@ import fs from "fs";
 import puppeteer from 'puppeteer';
 
 export async function saveCookies(page: puppeteer.Page, cookiesPath: string) {
-  const client = await page.target().createCDPSession();
-  const cookies = (await client.send("Network.getAllCookies"))["cookies"];
-  console.log("Writing cookies");
-  fs.writeFileSync(cookiesPath, JSON.stringify(cookies));
+    const client = await page.target().createCDPSession();
+    const cookies = (await client.send("Network.getAllCookies"))["cookies"];
+    console.log("Writing cookies");
+    fs.writeFileSync(cookiesPath, JSON.stringify(cookies));
 }
 
 export async function restoreCookies(page: puppeteer.Page, cookiesPath: string) {
