@@ -80,6 +80,18 @@ you'll need to call `http://localhost:8080/epitest/me/2021`.
 You might encounter issues with the bundled Chrome revision (fail to load due
 to syntax error, etc.).
 
-To make it work, you can download the `chromium-browser` package and specify
-`BROWSER_BINARY_PATH=/usr/bin/chromium-browser` in your `.env` file to use
-this one instead of the bundled one.
+To make it work, you can download the `chromium-browser` package with your
+system package manager, and specify `BROWSER_BINARY_PATH=/usr/bin/chromium-browser`
+in your `.env` file to use this one instead of the bundled one.
+
+In Raspbian, these commands should do it:
+```bash
+# install chromium
+sudo apt-get install chromium-browser
+
+# create .env if it does not exists
+cp -n .env.example .env
+
+# replace the browser binary path
+sed -i 's/^BROWSER_BINARY_PATH=.*$/BROWSER_BINARY_PATH=\/usr\/bin\/chromium-browser/' .env
+```
