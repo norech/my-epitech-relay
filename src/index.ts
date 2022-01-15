@@ -9,6 +9,8 @@ async function openMicrosoftWindow(base: puppeteer.Page, url: string) {
     if (process.env.NO_WINDOW)
         throw new Error("No window mode enabled");
     const browser = await puppeteer.launch({
+        executablePath: process.env.CHROME_PATH != ""
+            ? process.env.CHROME_PATH : undefined,
         headless: false,
         args: ["--app=https://my.epitech.eu", "--window-size=800,600"]
     });
@@ -25,7 +27,11 @@ async function openMicrosoftWindow(base: puppeteer.Page, url: string) {
 
 async function refreshMyEpitechToken() {
     const loginBtnSelector = '[href^="https://login.microsoftonline.com/common/oauth2/authorize"]';
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        executablePath: process.env.CHROME_PATH != ""
+            ? process.env.CHROME_PATH : undefined,
+        headless: true
+    });
     const page = await browser.newPage();
     try {
         await restoreCookies(page, "./cookies.json");
