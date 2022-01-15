@@ -8,8 +8,12 @@ const app = express();
 async function openMicrosoftWindow(base: puppeteer.Page, url: string) {
     if (process.env.NO_WINDOW)
         throw new Error("No window mode enabled");
-    const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
+    const browser = await puppeteer.launch({
+        headless: false,
+        args: ["--app=https://my.epitech.eu", "--window-size=800,600"]
+    });
+    const pages = await browser.pages();
+    const page = pages[0];
     await saveCookies(base, "./cookies.json");
     await restoreCookies(page, "./cookies.json");
     await page.goto(url);
