@@ -72,3 +72,14 @@ https://localhost:8080/epitest/*  =>  https://api.epitest.eu/*
 
 For example, to get `https://api.epitest.eu/me/2021`,
 you'll need to call `http://localhost:8080/epitest/me/2021`.
+
+## Troubleshooting
+
+#### How to make it work on a Raspberry Pi?
+
+You might encounter issues with the bundled Chrome revision (fail to load due
+to syntax error, etc.).
+
+To make it work, you can download the `chromium-browser` package and specify
+`BROWSER_BINARY_PATH=/usr/bin/chromium-browser` in your `.env` file to use
+this one instead of the bundled one.
