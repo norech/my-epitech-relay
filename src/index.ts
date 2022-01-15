@@ -35,6 +35,8 @@ async function refreshMyEpitechToken() {
             if (url.startsWith("https://login.microsoftonline.com/")) {
                 console.log("Asking for oauth...");
                 await openMicrosoftWindow(page, url);
+                await page.reload();
+                await page.waitForNetworkIdle();
             } else {
                 console.log("Auto-auth was successful");
             }
