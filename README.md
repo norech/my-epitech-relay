@@ -40,7 +40,7 @@ You will need to authenticate in this window, in the opened tab. Complete all
 authentication steps, click on "Stay logged in" everywhere you're asked, and
 wait until you are back on my.epitech.eu. The window should close.
 
-### `NO_WINDOW` mode
+### `NO_WINDOW` mode (or Docker)
 
 Let's say you don't have any graphical interface. You will need to provide the
 cookies to the browser. To do that, install the relay on another machine and
@@ -94,4 +94,32 @@ cp -n .env.example .env
 
 # replace the browser binary path
 sed -i 's/^BROWSER_BINARY_PATH=.*$/BROWSER_BINARY_PATH=\/usr\/bin\/chromium-browser/' .env
+```
+
+#### How to set it up with docker-compose?
+
+> The docker-compose configuration provided is intented only for remote setups on servers.
+
+Set it up, you will need to provide a `cookies.json` file generated with a local
+install of the relay, made without Docker. See the Manual login section.
+
+You must then clone this repo on the remote server and place the `cookies.json`
+inside.
+
+```bash
+git clone https://github.com/norech/my-epitech-relay.git
+cp /somewhere/cookies.json my-epitech-relay
+```
+
+And then run `docker-compose` commands to build and run.
+
+```bash
+# go to relay repository folder
+cd my-epitech-relay
+
+# build the image
+docker-compose build
+
+# start the container
+docker-compose up    # add "-d" to start it in background (detached)
 ```
