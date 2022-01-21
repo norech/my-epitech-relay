@@ -32,6 +32,7 @@ async function refreshMyEpitechToken() {
         executablePath: process.env.BROWSER_BINARY_PATH != ""
             ? process.env.BROWSER_BINARY_PATH : undefined,
         product: process.env.BROWSER_TYPE as "chrome" | "firefox",
+        args: process.env.BROWSER_ARGS?.split(" ") ?? [],
         headless: true
     });
     const page = await browser.newPage();
