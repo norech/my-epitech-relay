@@ -1,4 +1,4 @@
-FROM node:10.15.3-stretch
+FROM node:12-stretch
 
 RUN apt-get update && apt-get install chromium -y
 
