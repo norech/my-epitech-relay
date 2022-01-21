@@ -6,7 +6,7 @@ import axios from 'axios';
 const app = express();
 
 async function openMicrosoftWindow(base: puppeteer.Page, url: string) {
-    if (process.env.NO_WINDOW)
+    if (process.env.NO_WINDOW == "1")
         throw new Error("No window mode enabled");
     const browser = await puppeteer.launch({
         executablePath: process.env.BROWSER_BINARY_PATH != ""
