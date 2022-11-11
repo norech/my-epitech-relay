@@ -1,5 +1,6 @@
 import fs from "fs";
 import puppeteer from 'puppeteer';
+import path_req from 'path';
 
 export async function saveCookies(page: puppeteer.Page, cookiesPath: string) {
     const client = await page.target().createCDPSession();
@@ -21,4 +22,12 @@ export async function restoreCookies(page: puppeteer.Page, cookiesPath: string) 
     } catch (err) {
         console.error("Can't restore cookies", err);
     }
+}
+
+export async function getCookiesFiles(path:string):Promise<Array<String>> {
+    const filenames = fs.readdirSync(path);
+    const jsonFiles = filenames.filter(function (file) {
+        return path_req.extname(file) === ".json";
+    });
+    return (jsonFiles);
 }
