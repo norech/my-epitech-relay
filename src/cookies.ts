@@ -10,15 +10,15 @@ export async function saveCookies(page: puppeteer.Page, cookiesPath: string) {
     fs.writeFileSync(cookiesPath, JSON.stringify(cookies));
 }
 
-export async function restoreCookies(page: puppeteer.Page, cookiesPath: string) {
+export async function restoreCookies(page: puppeteer.Page, cookiesJSON: string) {
     console.log("4");
-    if (!fs.existsSync(cookiesPath)) {
-        console.log("No cookies to restore.");
-        return;
-    }
+    // if (!fs.existsSync(cookiesPath)) {
+    //     console.log("No cookies to restore.");
+    //     return;
+    // }
     try {
-        let buf = fs.readFileSync(cookiesPath);
-        let cookies = JSON.parse(buf.toString());
+        // let buf = fs.readFileSync(cookiesPath);
+        let cookies = JSON.parse(cookiesJSON.toString());
         console.log("Restoring cookies");
         await page.setCookie(...cookies);
     } catch (err) {

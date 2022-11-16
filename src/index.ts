@@ -1,11 +1,12 @@
 require('dotenv').config();
 import puppeteer from 'puppeteer';
 import { restoreCookies, saveCookies, getCookiesFiles } from './cookies';
-import express from "express";
+import { getUserIfCookiesStatusIs } from './bdd_lib';
+import express, { json } from "express";
 import axios from 'axios';
 const app = express();
 
-async function refreshMyEpitechToken(filePath: string) {
+async function refreshMyEpitechToken(cookiesJSON: string) {
     console.log("2");
     const loginBtnSelector = '[href^="https://login.microsoftonline.com/common/oauth2/authorize"]';
     const browser = await puppeteer.launch({
@@ -15,11 +16,11 @@ async function refreshMyEpitechToken(filePath: string) {
         args: process.env.BROWSER_ARGS?.split(" ") ?? [],
         headless: true
     });
-    
+
 
     const page = await browser.newPage();
     try {
-        await restoreCookies(page, filePath);
+        await restoreCookies(page, cookiesJSON);
         await page.goto('https://my.epitech.eu');
         const loginButton = await page.$(loginBtnSelector);
         if (loginButton != null) {
@@ -73,40 +74,40 @@ async function executeEpitestRequest(req: express.Request, token: string) {
     return res;
 }
 
+async function setRouteRelay(userInfo:any) {
+    let myEpitechToken = await refreshMyEpitechToken(userInfo.cookies);
+    app.get("/" + userInfo.email + "/", (req, res) => {
+        res.send("the relay is working :D");
+    });
+
+    app.use("/"+ userInfo.email + "/epitest", async (req, res) => {
+        try {
+            let content = await executeEpitestRequest(req, myEpitechToken);
+            if (content.status == 401) {
+                myEpitechToken = await refreshMyEpitechToken(userInfo.cookies);
+                content = await executeEpitestRequest(req, myEpitechToken);
+            }
+            res.status(content.status).send(content.data);
+        } catch (ex) {
+            console.error(ex);
+            res.status(500).send("Relay error.");
+        }
+    })
+}
+
+
 (async () => {
     console.log("0");
-    const pathDir = './cookies_bd/';
-    var fileList:Array<String> = await getCookiesFiles(pathDir);
-    console.log(fileList.length);
-    
-    for (var i = 0; i < fileList.length; ++i) {
-        const fileName = fileList[i].replace(".json", '');
-        const filePath = pathDir + fileList[i];
-        console.log(fileList[i], fileName, filePath);
-
-        let myEpitechToken = await refreshMyEpitechToken(filePath);
-        app.get("/" + fileName + "/", (req, res) => {
-            res.send("the relay is working :D");
+    //verifier 'new' and 'wait' cookie_status pour mettre ceux qui fonctionne en 'ok'
+    // checkAndSetNewUsers()
+    getUserIfCookiesStatusIs('ok', async function(userList:any) {
+        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
+            await setRouteRelay(userList[i]);
+        }
+        const port = parseInt(process.env.PORT ?? "8080");
+        const host = process.env.HOST ?? "127.0.0.1";
+        app.listen(port, host, () => {
+            console.log("Relay server started at http://" + host + ":" + port);
         });
-
-        app.use("/"+ fileName + "/epitest", async (req, res) => {
-            try {
-                let content = await executeEpitestRequest(req, myEpitechToken);
-                if (content.status == 401) {
-                    myEpitechToken = await refreshMyEpitechToken(filePath);
-                    content = await executeEpitestRequest(req, myEpitechToken);
-                }
-                res.status(content.status).send(content.data);
-            } catch (ex) {
-                console.error(ex);
-                res.status(500).send("Relay error.");
-            }
-        })
-    }
-    const port = parseInt(process.env.PORT ?? "8080");
-    const host = process.env.HOST ?? "127.0.0.1";
-
-    app.listen(port, host, () => {
-        console.log("Relay server started at http://" + host + ":" + port);
     });
 })();
