@@ -1,5 +1,3 @@
-import { ListFormat } from "typescript";
-
 var mysql = require('mysql');
 
 export async function getUserIfCookiesStatusIs(status:string, callback:CallableFunction) {

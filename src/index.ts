@@ -1,13 +1,12 @@
 require('dotenv').config();
 import puppeteer from 'puppeteer';
-import { restoreCookies, saveCookies, getCookiesFiles } from './cookies';
+import { restoreCookies } from './cookies';
 import { getUserIfCookiesStatusIs, changeUserCookiesStatus, getAllCookiesStatusOfUsers } from './bdd_lib';
 import express, { json } from "express";
 import axios from 'axios';
 const app = express();
 
 async function refreshMyEpitechToken(cookiesJSON: string) {
-    console.log("2");
     const loginBtnSelector = '[href^="https://login.microsoftonline.com/common/oauth2/authorize"]';
     const browser = await puppeteer.launch({
         executablePath: process.env.BROWSER_BINARY_PATH != ""
@@ -35,12 +34,10 @@ async function refreshMyEpitechToken(cookiesJSON: string) {
             } else {
                 console.log("Auto-auth was successful");
             }
-            console.log("2.2");
         } else {
             console.log("Already logged in");
         }
     } catch (ex) {
-        console.log("2.3");
         await page.goto('https://my.epitech.eu');
         const loginButton = await page.$(loginBtnSelector);
         if (loginButton != null) {
@@ -48,7 +45,6 @@ async function refreshMyEpitechToken(cookiesJSON: string) {
             throw ex;
         }
     }
-    console.log("2.4");
     const token = await page.evaluate(() => localStorage.getItem("argos-api.oidc-token"));
     await browser.close();
     if (typeof token !== "string")
@@ -57,7 +53,6 @@ async function refreshMyEpitechToken(cookiesJSON: string) {
 }
 
 async function executeEpitestRequest(req: express.Request, token: string) {
-    console.log("1");
     const res = await axios({
         baseURL: "https://api.epitest.eu/",
         url: req.path,
@@ -117,22 +112,25 @@ async function checkAndSetNewUsers() {
     });
 }
 
+const asyncFunction = (t:any) => new Promise(resolve => setTimeout(resolve, t));
+
+async function infinitLoopForUserStatus() {
+    while (true) {
+        console.log("start infinitLoopForUserStatus");
+        await checkAndSetNewUsers();
+        console.log("end infinitLoopForUserStatus");
+        await asyncFunction(50000);
+    }
+}
+
 (async () => {
-    console.log("0");
-    // await checkAndSetNewUsers();
     getUserIfCookiesStatusIs('ok', async function(userList:any) {
         for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
             await setRouteRelay(userList[i]);
         }
     });
-    // getAllCookiesStatusOfUsers(async function(userList:any) {
-    //     for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
-    //         app.get("/" + userList[i].email + "/status", (req, res) => {
-    //             console.log(userList[i].email)
-    //             res.send(userList[i].email);
-    //         });
-    //     }
-    // });
+
+    infinitLoopForUserStatus();
     const port = parseInt(process.env.PORT ?? "8080");
     const host = process.env.HOST ?? "127.0.0.1";
     app.listen(port, host, () => {
