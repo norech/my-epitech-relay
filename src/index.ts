@@ -1,7 +1,7 @@
 require('dotenv').config();
 import puppeteer from 'puppeteer';
 import { restoreCookies, saveCookies, getCookiesFiles } from './cookies';
-import { getUserIfCookiesStatusIs } from './bdd_lib';
+import { getUserIfCookiesStatusIs, changeUserCookiesStatus, getAllCookiesStatusOfUsers } from './bdd_lib';
 import express, { json } from "express";
 import axios from 'axios';
 const app = express();
@@ -30,11 +30,8 @@ async function refreshMyEpitechToken(cookiesJSON: string) {
             const url = page.mainFrame().url();
             if (url.startsWith("https://login.microsoftonline.com/")) {
                 console.log("2.0");
-                console.log("Asking for oauth...");
-                // await openMicrosoftWindow(page, url);
-                await page.reload();
-                await page.waitForNetworkIdle();
-                console.log("2.1");
+                console.log("Oauth failed...");
+                return ("token_error");
             } else {
                 console.log("Auto-auth was successful");
             }
@@ -70,15 +67,11 @@ async function executeEpitestRequest(req: express.Request, token: string) {
             "Origin": "my.epitech.eu"
         }
     }).catch(e => e.response);
-
     return res;
 }
 
 async function setRouteRelay(userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo.cookies);
-    app.get("/" + userInfo.email + "/", (req, res) => {
-        res.send("the relay is working :D");
-    });
 
     app.use("/"+ userInfo.email + "/epitest", async (req, res) => {
         try {
@@ -95,19 +88,54 @@ async function setRouteRelay(userInfo:any) {
     })
 }
 
+async function checkAndSetNewUsers() {
+    await getUserIfCookiesStatusIs('wait', async function(userList:any) {
+        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
+            var rsp = await refreshMyEpitechToken(userList[i].cookies);
+            console.log("user email:", userList[i].email);
+            console.log("return function:", rsp);
+            if (rsp == "token_error") {
+                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'expired');
+            } else {
+                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'ok');
+                await setRouteRelay(userList[i]);
+            }
+        }
+    });
+    await getUserIfCookiesStatusIs('new', async function(userList:any) {
+        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
+            var rsp = await refreshMyEpitechToken(userList[i].cookies);
+            console.log("user email:", userList[i].email);
+            console.log("return function:", rsp);
+            if (rsp == "token_error") {
+                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'expired');
+            } else {
+                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'ok');
+                await setRouteRelay(userList[i]);
+            }
+        }
+    });
+}
 
 (async () => {
     console.log("0");
-    //verifier 'new' and 'wait' cookie_status pour mettre ceux qui fonctionne en 'ok'
-    // checkAndSetNewUsers()
+    // await checkAndSetNewUsers();
     getUserIfCookiesStatusIs('ok', async function(userList:any) {
         for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
             await setRouteRelay(userList[i]);
         }
-        const port = parseInt(process.env.PORT ?? "8080");
-        const host = process.env.HOST ?? "127.0.0.1";
-        app.listen(port, host, () => {
-            console.log("Relay server started at http://" + host + ":" + port);
-        });
+    });
+    // getAllCookiesStatusOfUsers(async function(userList:any) {
+    //     for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
+    //         app.get("/" + userList[i].email + "/status", (req, res) => {
+    //             console.log(userList[i].email)
+    //             res.send(userList[i].email);
+    //         });
+    //     }
+    // });
+    const port = parseInt(process.env.PORT ?? "8080");
+    const host = process.env.HOST ?? "127.0.0.1";
+    app.listen(port, host, () => {
+        console.log("Relay server started at http://" + host + ":" + port);
     });
 })();
