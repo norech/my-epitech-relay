@@ -1,9 +1,8 @@
 require('dotenv').config();
-import puppeteer from 'puppeteer';
+import puppeteer, { TimeoutSettings } from 'puppeteer';
 import { restoreCookies } from './cookies';
-import { getUserIfCookiesStatusIs, changeUserCookiesStatus, getAllCookiesStatusOfUsers } from './bdd_lib';
 import express, { json } from "express";
-import axios from 'axios';
+import axios, { Method } from 'axios';
 const app = express();
 
 async function refreshMyEpitechToken(cookiesJSON: string) {
@@ -15,7 +14,6 @@ async function refreshMyEpitechToken(cookiesJSON: string) {
         args: process.env.BROWSER_ARGS?.split(" ") ?? [],
         headless: true
     });
-
 
     const page = await browser.newPage();
     try {
@@ -66,13 +64,13 @@ async function executeEpitestRequest(req: express.Request, token: string) {
 }
 
 async function setRouteRelay(userInfo:any) {
-    let myEpitechToken = await refreshMyEpitechToken(userInfo.cookies);
+    let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
 
-    app.use("/"+ userInfo.email + "/epitest", async (req, res) => {
+    app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
             if (content.status == 401) {
-                myEpitechToken = await refreshMyEpitechToken(userInfo.cookies);
+                myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
                 content = await executeEpitestRequest(req, myEpitechToken);
             }
             res.status(content.status).send(content.data);
@@ -83,56 +81,60 @@ async function setRouteRelay(userInfo:any) {
     })
 }
 
+async function executeBDDApiRequest(endpoint:string, params:string, method:Method, body:object) {
+    const res = await axios({
+        method: method,
+        url: "http://127.0.0.1:3000/" + endpoint + params,
+        headers: {
+            "Authorization": "Bearer " + "veuxarisassherkzbdbd",
+        },
+        data: body
+    }).catch(e => e.response);
+    return res;
+}
+
 async function checkAndSetNewUsers() {
-    await getUserIfCookiesStatusIs('wait', async function(userList:any) {
-        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
-            var rsp = await refreshMyEpitechToken(userList[i].cookies);
-            console.log("user email:", userList[i].email);
-            console.log("return function:", rsp);
-            if (rsp == "token_error") {
-                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'expired');
-            } else {
-                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'ok');
-                await setRouteRelay(userList[i]);
-            }
+    let rsp_wait = await executeBDDApiRequest("user/status/", "wait", 'GET', {});
+    let userList_wait = rsp_wait.data;
+    for (var i = 0, len = userList_wait.length; i < len; ++i) {
+        var rsp = await refreshMyEpitechToken(userList_wait[i]['cookies']);
+        if (rsp == "token_error") {
+            await executeBDDApiRequest("user/id/", JSON.stringify(userList_wait[i]['id']), 'PUT', {'cookies_status':'expired'})
+        } else {
+            await executeBDDApiRequest("user/id/", JSON.stringify(userList_wait[i]['id']), 'PUT', {'cookies_status':'ok'})
+            await setRouteRelay(userList_wait[i]);
         }
-    });
-    await getUserIfCookiesStatusIs('new', async function(userList:any) {
-        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
-            var rsp = await refreshMyEpitechToken(userList[i].cookies);
-            console.log("user email:", userList[i].email);
-            console.log("return function:", rsp);
-            if (rsp == "token_error") {
-                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'expired');
-            } else {
-                await changeUserCookiesStatus(JSON.stringify(userList[i].id), 'ok');
-                await setRouteRelay(userList[i]);
-            }
+    }
+    let rsp_new = await executeBDDApiRequest("user/status/", "new", 'GET', {});
+    let userList_new = rsp_new.data;
+    for (var i = 0, len = userList_new.length; i < len; ++i) {
+        var rsp = await refreshMyEpitechToken(userList_new[i]['cookies']);
+        if (rsp == "token_error") {
+            await executeBDDApiRequest("user/id/", JSON.stringify(userList_new[i]['id']), 'PUT', {'cookies_status':'expired'})
+        } else {
+            await executeBDDApiRequest("user/id/", JSON.stringify(userList_new[i]['id']), 'PUT', {'cookies_status':'ok'})
+            await setRouteRelay(userList_new[i]);
         }
-    });
+    }
 }
 
 const asyncFunction = (t:any) => new Promise(resolve => setTimeout(resolve, t));
 
 async function infinitLoopForUserStatus() {
     while (true) {
-        console.log("start infinitLoopForUserStatus");
         await checkAndSetNewUsers();
-        console.log("end infinitLoopForUserStatus");
-        await asyncFunction(50000);
+        await asyncFunction(60000);
     }
 }
 
 (async () => {
-    getUserIfCookiesStatusIs('ok', async function(userList:any) {
-        for (var i = 0, len = Object.keys(userList).length; i < len; ++i) {
-            await setRouteRelay(userList[i]);
-        }
-    });
-
+    const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
+    for (var i = 0, len = userList.data.length; i < len; ++i) {
+        await setRouteRelay(userList.data[i]);
+    }
     infinitLoopForUserStatus();
-    const port = parseInt(process.env.PORT ?? "8080");
-    const host = process.env.HOST ?? "127.0.0.1";
+    const port = parseInt(process.env.PORT_API ?? "8080");
+    const host = process.env.HOST_API ?? "127.0.0.1";
     app.listen(port, host, () => {
         console.log("Relay server started at http://" + host + ":" + port);
     });
