@@ -1,6 +1,4 @@
-import fs from "fs";
 import puppeteer from 'puppeteer';
-import path_req from 'path';
 
 export async function restoreCookies(page: puppeteer.Page, cookiesJSON: string) {
     try {
@@ -11,4 +9,3 @@ export async function restoreCookies(page: puppeteer.Page, cookiesJSON: string) 
         console.error("Can't restore cookies", err);
     }
 }
-
