@@ -3,5 +3,3 @@ cookies*.json
 node_modules
 out
 .env
-package.json
-package-lock.json
