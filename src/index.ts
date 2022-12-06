@@ -6,7 +6,6 @@ const app = express();
 
 async function setRouteRelay(userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    console.log(userInfo['email']);
     app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
@@ -67,10 +66,8 @@ async function infinitLoopForUserStatus() {
     const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
     if (userList == false)
         throw new Error("List of user not found");
-    for (var i = 0, len = userList.data.length; i < len; ++i) {
-        console.log(userList.data[i].id)
+    for (var i = 0, len = userList.data.length; i < len; ++i)
         await setRouteRelay(userList.data[i]);
-    }
     infinitLoopForUserStatus();
 
     app.get("/", (req, res) => {
