@@ -77,8 +77,8 @@ async function infinitLoopForUserStatus() {
         res.send("the relay is working :D");
     });
 
-    const port = parseInt(process.env.PORT_API ?? "8090");
-    const host = process.env.HOST_API ?? "127.0.0.1";
+    const port:any = process.env.HOST_PORT;
+    const host:any = process.env.HOST_NAME;
     app.listen(port, host, () => {
         console.log("Relay server started at http://" + host + ":" + port);
     });
