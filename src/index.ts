@@ -6,7 +6,6 @@ const app = express();
 
 async function setRouteRelay(userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    console.log(userInfo['email']);
     app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
@@ -67,18 +66,14 @@ async function infinitLoopForUserStatus() {
     const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
     if (userList == false)
         throw new Error("List of user not found");
-    for (var i = 0, len = userList.data.length; i < len; ++i) {
-        console.log(userList.data[i].id)
+    for (var i = 0, len = userList.data.length; i < len; ++i)
         await setRouteRelay(userList.data[i]);
-    }
     infinitLoopForUserStatus();
-
     app.get("/", (req, res) => {
         res.send("the relay is working :D");
     });
-
-    const port = parseInt(process.env.PORT_API ?? "8090");
-    const host = process.env.HOST_API ?? "127.0.0.1";
+    const host:any = process.env.HOST_NAME;
+    const port:any = process.env.PORT;
     app.listen(port, host, () => {
         console.log("Relay server started at http://" + host + ":" + port);
     });

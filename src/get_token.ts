@@ -21,13 +21,8 @@ export async function refreshMyEpitechToken(cookiesJSON: string) {
             await page.waitForNetworkIdle();
             const url = page.mainFrame().url();
             if (url.startsWith("https://login.microsoftonline.com/")) {
-                console.log("Oauth failed...");
                 return ("token_error");
-            } else {
-                console.log("Auto-auth was successful");
             }
-        } else {
-            console.log("Already logged in");
         }
     } catch (ex) {
         await page.goto('https://my.epitech.eu');
