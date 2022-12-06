@@ -69,13 +69,11 @@ async function infinitLoopForUserStatus() {
     for (var i = 0, len = userList.data.length; i < len; ++i)
         await setRouteRelay(userList.data[i]);
     infinitLoopForUserStatus();
-
     app.get("/", (req, res) => {
         res.send("the relay is working :D");
     });
-
-    const port:any = process.env.HOST_PORT;
     const host:any = process.env.HOST_NAME;
+    const port:any = process.env.PORT;
     app.listen(port, host, () => {
         console.log("Relay server started at http://" + host + ":" + port);
     });
