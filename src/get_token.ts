@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import {restoreCookies} from './cookies';
+import { restoreCookies } from './cookies';
 
 export async function refreshMyEpitechToken(cookiesJSON: string) {
     const loginBtnSelector = '[href^="https://login.microsoftonline.com/common/oauth2/authorize"]';
@@ -21,6 +21,7 @@ export async function refreshMyEpitechToken(cookiesJSON: string) {
             await page.waitForNetworkIdle();
             const url = page.mainFrame().url();
             if (url.startsWith("https://login.microsoftonline.com/")) {
+                console.log("token_error");
                 return ("token_error");
             }
         }
