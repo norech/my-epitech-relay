@@ -1,7 +1,6 @@
+require('dotenv').config();
 import axios, { Method } from 'axios';
 import express from "express";
-import { refreshMyEpitechToken } from './get_token';
-require('dotenv').config();
 const app = express();
 
 export async function executeBDDApiRequest(endpoint:string, params:string, method:Method, body:object) {
@@ -29,21 +28,4 @@ export async function executeEpitestRequest(req: express.Request, token: string)
         }
     }).catch(e => e.response);
     return res;
-}
-
-export async function setRouteRelay(userInfo:any) {
-    let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
-        try {
-            let content = await executeEpitestRequest(req, myEpitechToken);
-            if (content.status == 401) {
-                myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-                content = await executeEpitestRequest(req, myEpitechToken);
-            }
-            res.status(content.status).send(content.data);
-        } catch (ex) {
-            console.error(ex);
-            res.status(500).send("Relay error.");
-        }
-    });
 }

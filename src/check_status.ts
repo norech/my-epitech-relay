@@ -1,5 +1,6 @@
 import { refreshMyEpitechToken } from './get_token';
-import { setRouteRelay, executeBDDApiRequest } from './api';
+import { executeBDDApiRequest } from './api';
+import { setRouteRelay } from './index';
 
 export async function checkWaitUsers() {
     let rspList = await executeBDDApiRequest("user/status/", "wait", 'GET', {});
@@ -32,4 +33,3 @@ export async function checkNewUsers() {
         }
     }
 }
-

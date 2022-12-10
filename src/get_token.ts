@@ -21,7 +21,6 @@ export async function refreshMyEpitechToken(cookiesJSON: string) {
             await page.waitForNetworkIdle();
             const url = page.mainFrame().url();
             if (url.startsWith("https://login.microsoftonline.com/")) {
-                console.log("token_error");
                 return ("token_error");
             }
         }

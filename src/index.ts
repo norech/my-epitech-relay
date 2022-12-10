@@ -1,8 +1,29 @@
-import { executeBDDApiRequest, setRouteRelay } from './api';
-import { checkWaitUsers, checkNewUsers } from './check_status';
-import express from "express";
 require('dotenv').config();
+import {refreshMyEpitechToken} from './get_token';
+import {executeEpitestRequest, executeBDDApiRequest} from './api';
+import { checkNewUsers, checkWaitUsers } from './check_status';
+import express from "express";
 const app = express();
+
+export async function setRouteRelay(userInfo:any) {
+    let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
+    app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
+        try {
+            let content = await executeEpitestRequest(req, myEpitechToken);
+            if (content.status == 401) {
+                myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
+                if (myEpitechToken == "token_error") {
+                    await executeBDDApiRequest("user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
+                } else
+                    content = await executeEpitestRequest(req, myEpitechToken);
+            }
+            res.status(content.status).send(content.data);
+        } catch (ex) {
+            console.error(ex);
+            res.status(500).send("Relay error.");
+        }
+    });
+}
 
 const asyncFunction = (t:any) => new Promise(resolve => setTimeout(resolve, t));
 
