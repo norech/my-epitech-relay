@@ -5,15 +5,25 @@ import { checkNewUsers, checkWaitUsers } from './check_status';
 import express from "express";
 const app = express();
 
+function removeRouteFromEmail(email:string) {
+    app._router.stack.forEach((route:any, i:number, routes:any) => {
+        if (route.route?.path && route.route?.path.includes(email))
+            routes.splice(i, 1);
+    });
+}
+
 export async function setRouteRelay(userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    app.use("/"+ userInfo['email'] + "/epitest", async (req, res) => {
+    app.get("/" + userInfo['email'] + "/epitest/:arg/:year", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
             if (content.status == 401) {
                 myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
                 if (myEpitechToken == "token_error") {
                     await executeBDDApiRequest("user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
+                    res.status(410).send({ message: "Cookies just expired" });
+                    removeRouteFromEmail(userInfo.email);
+                    return;
                 } else
                     content = await executeEpitestRequest(req, myEpitechToken);
             }
