@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import {restoreCookies} from './cookies';
+import { restoreCookies } from './cookies';
 
 export async function refreshMyEpitechToken(cookiesJSON: string) {
     const loginBtnSelector = '[href^="https://login.microsoftonline.com/common/oauth2/authorize"]';
