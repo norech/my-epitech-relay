@@ -1,7 +1,7 @@
 require('dotenv').config();
 import {refreshMyEpitechToken} from './get_token';
 import {executeEpitestRequest, executeBDDApiRequest} from './api';
-import { checkNewUsers, checkWaitUsers } from './check_status';
+import { checkStatusUsers } from './check_status';
 import express from "express";
 const app = express();
 
@@ -35,20 +35,20 @@ export async function setRouteRelay(userInfo:any) {
     });
 }
 
-const asyncFunction = (t:any) => new Promise(resolve => setTimeout(resolve, t));
+const asyncSleep = (t:any) => new Promise(resolve => setTimeout(resolve, t));
 
 async function infinitLoopForUserStatus() {
     while (true) {
-        await checkWaitUsers();
-        await checkNewUsers();
-        await asyncFunction(60000);
+        await checkStatusUsers("wait");
+        await checkStatusUsers("new");
+        await asyncSleep(60000);
     }
 }
 
 (async () => {
     const checkAPI = await executeBDDApiRequest("", "", 'GET', {});
     if (checkAPI == false)
-        throw new Error("API not launch");
+        throw new Error("API not launched");
     const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
     if (userList == false)
         throw new Error("List of user not found");
