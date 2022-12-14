@@ -12,9 +12,9 @@ function removeRouteFromEmail(email:string) {
     });
 }
 
-export async function setRouteRelay(userInfo:any) {
+export async function setRouteRelay(userEmail:string, userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    app.get("/" + userInfo['email'] + "/epitest/me/:year", async (req, res) => {
+    app.get("/" + userEmail + "/epitest/me/:year", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
             if (content.status == 401) {
@@ -22,7 +22,7 @@ export async function setRouteRelay(userInfo:any) {
                 if (myEpitechToken == "token_error") {
                     await executeBDDApiRequest("user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
                     res.status(410).send({ message: "Cookies just expired" });
-                    removeRouteFromEmail(userInfo.email);
+                    removeRouteFromEmail(userEmail);
                     return;
                 } else
                     content = await executeEpitestRequest(req, myEpitechToken);
@@ -36,6 +36,26 @@ export async function setRouteRelay(userInfo:any) {
 }
 
 async function accountRoute() {
+    app.get("/account/change/:id/:oldemail/:newemail", async (req, res) => {
+        try {
+            const id = req.params.id;
+            const newEmail = req.params.newemail;
+            const oldemail = req.params.oldemail;
+            if (id !== undefined && newEmail !== undefined) {
+                const userInfo = await executeBDDApiRequest('user/id/',id, 'GET', {});
+                if (userInfo !== false) {
+                    await executeBDDApiRequest("user/id/", id, 'PUT', {'cookies_status':'wait'})
+                    removeRouteFromEmail(oldemail);
+                    res.status(200).send({ message: "Route change" });
+                } else
+                    res.status(400).send({ message: "id not found" });
+            } else
+                res.status(400).send({ message: "bad argument" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Relay error");
+        }
+    });
     app.get("/account/delete/:email", async (req, res) => {
         try {
             const email = req.params.email;
@@ -67,9 +87,9 @@ async function infinitLoopForUserStatus() {
         throw new Error("API not launched");
     const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
     if (userList == false)
-    throw new Error("List of user not found");
+        throw new Error("List of user not found");
     for (var i = 0, len = userList.data.length; i < len; ++i)
-        await setRouteRelay(userList.data[i]);
+        await setRouteRelay(userList.data[i]['email'], userList.data[i]);
     await accountRoute();
     infinitLoopForUserStatus();
     app.get("/", (req, res) => {
