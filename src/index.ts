@@ -28,9 +28,25 @@ export async function setRouteRelay(userInfo:any) {
                     content = await executeEpitestRequest(req, myEpitechToken);
             }
             res.status(content.status).send(content.data);
-        } catch (ex) {
-            console.error(ex);
-            res.status(500).send("Relay error.");
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Relay error");
+        }
+    });
+}
+
+async function accountRoute() {
+    app.get("/account/delete/:email", async (req, res) => {
+        try {
+            const email = req.params.email;
+            if (email !== undefined) { //TODO if email is not exist
+                removeRouteFromEmail(email);
+                res.status(200).send({ message: "Route delete" });
+            } else
+                res.status(400).send({ message: "Bad argument" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Relay error");
         }
     });
 }
@@ -51,9 +67,10 @@ async function infinitLoopForUserStatus() {
         throw new Error("API not launched");
     const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
     if (userList == false)
-        throw new Error("List of user not found");
+    throw new Error("List of user not found");
     for (var i = 0, len = userList.data.length; i < len; ++i)
         await setRouteRelay(userList.data[i]);
+    await accountRoute();
     infinitLoopForUserStatus();
     app.get("/", (req, res) => {
         res.send("the relay is working :D");
