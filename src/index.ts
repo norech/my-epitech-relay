@@ -56,7 +56,7 @@ async function accountRoute() {
             res.status(500).send("Relay error");
         }
     });
-    app.get("/account/delete/:email", async (req, res) => {
+    app.delete("/account/delete/:email", async (req, res) => {
         try {
             const email = req.params.email;
             if (email !== undefined) { //TODO if email is not exist
