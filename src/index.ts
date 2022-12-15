@@ -7,9 +7,12 @@ const app = express();
 
 function removeRouteFromEmail(email:string) {
     app._router.stack.forEach((route:any, i:number, routes:any) => {
-        if (route.route?.path && route.route?.path.includes(email))
+        if (route.route?.path && route.route?.path.includes(email)) {
             routes.splice(i, 1);
+            return (0);
+        }
     });
+    return (-84);
 }
 
 export async function setRouteRelay(userEmail:string, userInfo:any) {
@@ -45,8 +48,10 @@ async function accountRoute() {
                 const userInfo = await executeBDDApiRequest('user/id/',id, 'GET', {});
                 if (userInfo !== false) {
                     await executeBDDApiRequest("user/id/", id, 'PUT', {'cookies_status':'wait'})
-                    removeRouteFromEmail(oldemail);
-                    res.status(200).send({ message: "Route change" });
+                    if (removeRouteFromEmail(oldemail) == -84)
+                        res.status(400).send({ message: "email not found" })
+                    else
+                        res.status(200).send({ message: "Route change" });
                 } else
                     res.status(400).send({ message: "id not found" });
             } else
@@ -59,9 +64,11 @@ async function accountRoute() {
     app.delete("/account/delete/:email", async (req, res) => {
         try {
             const email = req.params.email;
-            if (email !== undefined) { //TODO if email is not exist
-                removeRouteFromEmail(email);
-                res.status(200).send({ message: "Route delete" });
+            if (email !== undefined) {
+                if (removeRouteFromEmail(email))
+                    res.status(400).send({ message: "email not found" })
+                else
+                    res.status(200).send({ message: "Route delete" });
             } else
                 res.status(400).send({ message: "Bad argument" });
         } catch (error) {
