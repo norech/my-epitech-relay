@@ -6,13 +6,14 @@ import express from "express";
 const app = express();
 
 function removeRouteFromEmail(email:string) {
+    let ret = -84;
     app._router.stack.forEach((route:any, i:number, routes:any) => {
         if (route.route?.path && route.route?.path.includes(email)) {
             routes.splice(i, 1);
-            return (0);
+            ret = 0;
         }
     });
-    return (-84);
+    return (ret);
 }
 
 export async function setRouteRelay(userEmail:string, userInfo:any) {
@@ -32,7 +33,6 @@ export async function setRouteRelay(userEmail:string, userInfo:any) {
             }
             res.status(content.status).send(content.data);
         } catch (error) {
-            console.error(error);
             res.status(500).send("Relay error");
         }
     });
@@ -47,17 +47,19 @@ async function accountRoute() {
             if (id !== undefined && newEmail !== undefined) {
                 const userInfo = await executeBDDApiRequest('user/id/',id, 'GET', {});
                 if (userInfo !== false) {
-                    await executeBDDApiRequest("user/id/", id, 'PUT', {'cookies_status':'wait'})
-                    if (removeRouteFromEmail(oldemail) == -84)
-                        res.status(400).send({ message: "email not found" })
-                    else
+                    if (removeRouteFromEmail(oldemail) === 0) {
+                        await executeBDDApiRequest("user/id/", id, 'PUT', {
+                            'cookies_status':'wait',
+                            'email': newEmail
+                        });
                         res.status(200).send({ message: "Route change" });
+                    } else
+                        res.status(400).send({ message: "email not found" });
                 } else
                     res.status(400).send({ message: "id not found" });
             } else
                 res.status(400).send({ message: "bad argument" });
         } catch (error) {
-            console.error(error);
             res.status(500).send("Relay error");
         }
     });
@@ -65,14 +67,13 @@ async function accountRoute() {
         try {
             const email = req.params.email;
             if (email !== undefined) {
-                if (removeRouteFromEmail(email))
-                    res.status(400).send({ message: "email not found" })
-                else
+                if (removeRouteFromEmail(email) === 0)
                     res.status(200).send({ message: "Route delete" });
+                else
+                    res.status(400).send({ message: "email not found" });
             } else
                 res.status(400).send({ message: "Bad argument" });
         } catch (error) {
-            console.error(error);
             res.status(500).send("Relay error");
         }
     });
