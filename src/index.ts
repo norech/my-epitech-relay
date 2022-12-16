@@ -39,30 +39,6 @@ export async function setRouteRelay(userEmail:string, userInfo:any) {
 }
 
 async function accountRoute() {
-    app.get("/account/change/:id/:oldemail/:newemail", async (req, res) => {
-        try {
-            const id = req.params.id;
-            const newEmail = req.params.newemail;
-            const oldemail = req.params.oldemail;
-            if (id !== undefined && newEmail !== undefined) {
-                const userInfo = await executeBDDApiRequest('user/id/',id, 'GET', {});
-                if (userInfo !== false) {
-                    if (removeRouteFromEmail(oldemail) === 0) {
-                        await executeBDDApiRequest("user/id/", id, 'PUT', {
-                            'cookies_status':'wait',
-                            'email': newEmail
-                        });
-                        res.status(200).send({ message: "Route change" });
-                    } else
-                        res.status(400).send({ message: "email not found" });
-                } else
-                    res.status(400).send({ message: "id not found" });
-            } else
-                res.status(400).send({ message: "bad argument" });
-        } catch (error) {
-            res.status(500).send("Relay error");
-        }
-    });
     app.delete("/account/delete/:email", async (req, res) => {
         try {
             const email = req.params.email;
