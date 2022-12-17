@@ -5,7 +5,8 @@
   "main": "out/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node out/index.js"
+    "start": "node out/index.js",
+    "test": "npm install && npm run build && npm start"
   },
   "author": "Norech",
   "license": "ISC",

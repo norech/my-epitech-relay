@@ -12,7 +12,7 @@ export async function checkStatusUsers(status:string) {
                 await executeBDDApiRequest("user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'expired'});
             } else {
                 await executeBDDApiRequest("user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'ok'});
-                await setRouteRelay(userList[i]);
+                await setRouteRelay(userList[i]['email'], userList[i]);
             }
         }
     }

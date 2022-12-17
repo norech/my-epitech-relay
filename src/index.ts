@@ -6,15 +6,19 @@ import express from "express";
 const app = express();
 
 function removeRouteFromEmail(email:string) {
+    let ret = -84;
     app._router.stack.forEach((route:any, i:number, routes:any) => {
-        if (route.route?.path && route.route?.path.includes(email))
+        if (route.route?.path && route.route?.path.includes(email)) {
             routes.splice(i, 1);
+            ret = 0;
+        }
     });
+    return (ret);
 }
 
-export async function setRouteRelay(userInfo:any) {
+export async function setRouteRelay(userEmail:string, userInfo:any) {
     let myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
-    app.get("/" + userInfo['email'] + "/epitest/me/:year", async (req, res) => {
+    app.get("/" + userEmail + "/epitest/me/:year", async (req, res) => {
         try {
             let content = await executeEpitestRequest(req, myEpitechToken);
             if (content.status == 401) {
@@ -22,15 +26,31 @@ export async function setRouteRelay(userInfo:any) {
                 if (myEpitechToken == "token_error") {
                     await executeBDDApiRequest("user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
                     res.status(410).send({ message: "Cookies just expired" });
-                    removeRouteFromEmail(userInfo.email);
+                    removeRouteFromEmail(userEmail);
                     return;
                 } else
                     content = await executeEpitestRequest(req, myEpitechToken);
             }
             res.status(content.status).send(content.data);
-        } catch (ex) {
-            console.error(ex);
-            res.status(500).send("Relay error.");
+        } catch (error) {
+            res.status(500).send("Relay error");
+        }
+    });
+}
+
+async function accountRoute() {
+    app.delete("/account/delete/:email", async (req, res) => {
+        try {
+            const email = req.params.email;
+            if (email !== undefined) {
+                if (removeRouteFromEmail(email) === 0)
+                    res.status(200).send({ message: "Route delete" });
+                else
+                    res.status(400).send({ message: "email not found" });
+            } else
+                res.status(400).send({ message: "Bad argument" });
+        } catch (error) {
+            res.status(500).send("Relay error");
         }
     });
 }
@@ -53,7 +73,8 @@ async function infinitLoopForUserStatus() {
     if (userList == false)
         throw new Error("List of user not found");
     for (var i = 0, len = userList.data.length; i < len; ++i)
-        await setRouteRelay(userList.data[i]);
+        await setRouteRelay(userList.data[i]['email'], userList.data[i]);
+    await accountRoute();
     infinitLoopForUserStatus();
     app.get("/", (req, res) => {
         res.send("the relay is working :D");
