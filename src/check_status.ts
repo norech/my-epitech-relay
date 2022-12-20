@@ -9,9 +9,9 @@ export async function checkStatusUsers(status:string) {
         for (let i = 0, len = userList.length; i < len; ++i) {
             const content = await refreshMyEpitechToken(userList[i]['cookies']);
             if (content == "token_error") {
-                await executeBDDApiRequest("user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'expired'});
+                await executeBDDApiRequest("/user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'expired'});
             } else {
-                await executeBDDApiRequest("user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'ok'});
+                await executeBDDApiRequest("/user/id/", JSON.stringify(userList[i]['id']), 'PUT', {'cookies_status':'ok'});
                 await setRouteRelay(userList[i]['email'], userList[i]);
             }
         }

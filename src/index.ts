@@ -66,10 +66,14 @@ async function infinitLoopForUserStatus() {
 }
 
 (async () => {
-    const checkAPI = await executeBDDApiRequest("", "", 'GET', {});
+    let checkAPI = await executeBDDApiRequest("", "", 'GET', {});
     if (checkAPI == false)
-        throw new Error("API not launched");
-    const userList = await executeBDDApiRequest("user/status/", "ok", 'GET', {});
+        console.log("API not launch, wait for the API...");
+    while (checkAPI['status'] !== 200) {
+        await asyncSleep(10000);
+        checkAPI = await executeBDDApiRequest("", "", 'GET', {});
+    }
+    const userList = await executeBDDApiRequest("/user/status/", "ok", 'GET', {});
     if (userList == false)
         throw new Error("List of user not found");
     for (var i = 0, len = userList.data.length; i < len; ++i)
