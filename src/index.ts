@@ -68,7 +68,7 @@ async function infinitLoopForUserStatus() {
 (async () => {
     let checkAPI = await executeBDDApiRequest("", "", 'GET', {});
     if (checkAPI == false)
-        console.log("API not launch, wait for the API...");
+        console.log("API has not yet started, waiting for the API to start...");
     while (checkAPI['status'] !== 200) {
         await asyncSleep(10000);
         checkAPI = await executeBDDApiRequest("", "", 'GET', {});
