@@ -24,7 +24,7 @@ export async function setRouteRelay(userEmail:string, userInfo:any) {
             if (content.status == 401) {
                 myEpitechToken = await refreshMyEpitechToken(userInfo['cookies']);
                 if (myEpitechToken == "token_error") {
-                    await executeBDDApiRequest("user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
+                    await executeBDDApiRequest("/user/id/", JSON.stringify(userInfo['id']), 'PUT', {'cookies_status':'expired'})
                     res.status(410).send({ message: "Cookies just expired" });
                     removeRouteFromEmail(userEmail);
                     return;

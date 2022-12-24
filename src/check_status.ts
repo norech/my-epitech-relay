@@ -3,7 +3,7 @@ import { executeBDDApiRequest } from './api';
 import { setRouteRelay } from './index';
 
 export async function checkStatusUsers(status:string) {
-    const rspList = await executeBDDApiRequest("user/status/", status, 'GET', {});
+    const rspList = await executeBDDApiRequest("/user/status/", status, 'GET', {});
     if (rspList !== false) {
         const userList = rspList.data;
         for (let i = 0, len = userList.length; i < len; ++i) {
